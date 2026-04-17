@@ -1,0 +1,5 @@
+### 本を借りるテスト
+POST http://localhost:8080/api/rentals/rent?bookId=1&userId=1
+
+### 本を返すテスト
+POST http://localhost:8080/api/rentals/return?bookId=1&userId=1
