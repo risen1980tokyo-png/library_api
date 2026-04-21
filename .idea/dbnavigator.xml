@@ -31,6 +31,9 @@
   <component name="DBNavigator.Project.DatabaseConsoleManager">
     <connection id="e372cfeb-a049-41fe-8004-ee05159c7fbe">
       <console name="Connection" type="STANDARD" schema="public" session="Main" />
+      <console name="library_db" type="STANDARD" schema="library_db" session="Main"><![CDATA[SET REFERENTIAL_INTEGRITY FALSE;
+DROP TABLE IF EXISTS rentals;
+SET REFERENTIAL_INTEGRITY TRUE;]]></console>
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseEditorStateManager">
@@ -38,9 +41,9 @@
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
     <open-files>
-      <object connection-id="e372cfeb-a049-41fe-8004-ee05159c7fbe" object-ref="schemas/public/tables/users" />
+      <object connection-id="e372cfeb-a049-41fe-8004-ee05159c7fbe" object-ref="consoles/library_db" />
+      <object connection-id="e372cfeb-a049-41fe-8004-ee05159c7fbe" object-ref="schemas/public/tables/rentals" />
       <object connection-id="e372cfeb-a049-41fe-8004-ee05159c7fbe" object-ref="schemas/public/tables/rental" />
-      <object connection-id="e372cfeb-a049-41fe-8004-ee05159c7fbe" object-ref="schemas/public/tables/books" />
     </open-files>
   </component>
   <component name="DBNavigator.Project.DatabasePrerequisiteManager">
@@ -53,6 +56,7 @@
     <filter-actions connection-id="e372cfeb-a049-41fe-8004-ee05159c7fbe" dataset="public.users" active-filter-id="EMPTY_FILTER" />
     <filter-actions connection-id="e372cfeb-a049-41fe-8004-ee05159c7fbe" dataset="public.rental" active-filter-id="EMPTY_FILTER" />
     <filter-actions connection-id="e372cfeb-a049-41fe-8004-ee05159c7fbe" dataset="public.books" active-filter-id="EMPTY_FILTER" />
+    <filter-actions connection-id="e372cfeb-a049-41fe-8004-ee05159c7fbe" dataset="public.rentals" active-filter-id="EMPTY_FILTER" />
   </component>
   <component name="DBNavigator.Project.ExecutionManager">
     <retain-sticky-names value="false" />

@@ -2,37 +2,53 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>図書貸出システム - プロフェッショナル保守版</title>
+    <title>図書貸出システム</title>
     <style>
-        :root { --primary-color: #007bff; --danger-color: #e74c3c; --success-color: #28a745; --panel-height: 450px; --max-width: 1200px; }
+        /* --- 1. デザインシステム --- */
+        :root {
+            --primary-color: #007bff; --danger-color: #e74c3c; --success-color: #28a745;
+            --panel-height: 450px; --max-width: 1200px;
+        }
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 15px; color: #333; }
         .user-selector, .container, .admin-section { max-width: var(--max-width); margin: 0 auto 15px auto; box-sizing: border-box; }
-        .user-selector { background: white; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .user-selector { background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .container { display: flex; gap: 20px; align-items: flex-start; }
+
+        /* パネル設定 */
         .panel { background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: var(--panel-height); display: flex; flex-direction: column; box-sizing: border-box; }
         .left-panel { flex: 3; }
         .right-panel { flex: 2; }
         .scroll-area { flex-grow: 1; overflow-y: auto; margin-top: 8px; border: 1px solid #eee; border-radius: 8px; }
+
+        /* テーブル */
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         thead { position: sticky; top: 0; background: #f8f9fa; z-index: 10; }
         th, td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         th { border-bottom: 2px solid #dee2e6; text-align: left; }
         h3 { margin: 0 0 10px 0; font-size: 18px; }
+
+        /* ボタン・フォーム */
         button { border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.1s; font-size: 13px; }
         button:active { transform: scale(0.96); }
         .btn-rent { background: var(--primary-color); color: white; }
         .btn-save { background: var(--success-color); color: white; flex-shrink: 0; }
         button:disabled { background: #ccc !important; cursor: not-allowed; opacity: 0.5; }
+        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+        .search-box { width: 100%; padding: 10px 15px; border: 2px solid #eee; border-radius: 25px; margin-bottom: 10px; box-sizing: border-box; outline: none; }
 
+        /* 延滞時スタイル */
         .overdue-row { background-color: #fff1f0; }
         .overdue-text { color: var(--danger-color) !important; font-weight: bold; }
         .overdue-btn { background-color: var(--danger-color) !important; color: white !important; }
 
+        /* 管理者セクション */
         .admin-section { background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .admin-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
         .admin-tabs button { background: #eee; color: #333; padding: 8px 15px; }
         .admin-tabs button.active { background: #444; color: white; }
         .form-group { display: flex; gap: 8px; align-items: center; width: 100%; box-sizing: border-box; }
+
+        /* 管理画面の幅微調整（こだわり） */
         #admin-book-select { width: 150px; flex-shrink: 0; }
         #admin-book-title  { flex: 6; min-width: 150px; }
         #admin-book-author { flex: 1.5; min-width: 100px; }
@@ -41,8 +57,10 @@
         #admin-user-select { width: 150px; flex-shrink: 0; }
         #admin-user-name   { flex: 3; min-width: 180px; }
         #admin-user-email  { flex: 2; min-width: 180px; }
-        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
-        .search-box { width: 100%; padding: 10px 15px; border: 2px solid #eee; border-radius: 25px; margin-bottom: 10px; box-sizing: border-box; outline: none; }
+
+        /* モーダル */
+        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center; }
+        .modal-content { background:white; padding:25px; border-radius:12px; text-align:center; max-width:400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
@@ -82,7 +100,6 @@
 </div>
 
 <div class="admin-section">
-    <h3 style="font-size: 16px;">🛠 管理者設定</h3>
     <div class="admin-tabs">
         <button id="tab-overdue" class="active" onclick="switchAdminTab('overdue')">🚨 延滞</button>
         <button id="tab-book" onclick="switchAdminTab('book')">本の管理</button>
@@ -121,8 +138,8 @@
     </div>
 </div>
 
-<div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
-    <div style="background:white; padding:25px; border-radius:12px; text-align:center; max-width:400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+<div id="modal">
+    <div class="modal-content">
         <div id="modalMsg" style="margin-bottom:20px; font-weight:bold; font-size: 14px; white-space:pre-wrap;"></div>
         <div id="modalButtons" style="display:flex; gap:10px; justify-content:center;">
             <button id="modalOkBtn" style="background:var(--primary-color); color:white; padding:8px 30px;">OK</button>
@@ -132,320 +149,226 @@
 </div>
 
 <script>
-    const API = {
-        BOOKS: '/api/books',
-        USERS: '/api/users',
-        RENTALS: '/api/rentals'
-    };
+    // --- 1. 定数・グローバル変数 ---
+    const API = { BOOKS: '/api/books', USERS: '/api/users', RENTALS: '/api/rentals' };
+    let booksData = [], usersData = [], isCurrentOverdue = false;
 
-    let booksData = [];
-    let usersData = [];
-    let isCurrentOverdue = false;
+    window.onload = async () => { await Promise.all([loadBooks(), loadUsers()]); };
 
-    window.onload = async () => { await loadBooks(); await loadUsers(); };
+    // --- 2. 共通通信関数 (究極のリファクタリング) ---
+    async function request(url, options = {}) {
+        const res = await fetch(url, options);
+        const isJson = res.headers.get("content-type")?.includes("application/json");
+        const data = isJson ? await res.json() : await res.text();
 
+        if (!res.ok) {
+            const errMsg = typeof data === 'object' ? data.error : data;
+            showModal(errMsg || "エラーが発生しました");
+            throw new Error(errMsg);
+        }
+        return data;
+    }
+
+    // --- 3. メイン表示・描画 ---
     async function loadBooks() {
         const q = document.getElementById('searchInput').value;
         const url = q ? `${API.BOOKS}/search?q=${encodeURIComponent(q)}` : API.BOOKS;
-        const res = await fetch(url);
-        booksData = await res.json();
-        const body = document.getElementById('bookListBody');
-        body.innerHTML = '';
+        booksData = await request(url);
 
-        booksData.forEach(b => {
-            const outOfStock = b.stock <= 0;
-            const isDisabled = outOfStock || isCurrentOverdue;
-
-            body.insertAdjacentHTML('beforeend', `
-                <tr>
-                    <td><strong>${b.title}</strong></td>
-                    <td style="color:${outOfStock?'red':'green'}">${outOfStock?'なし':b.stock+'冊'}</td>
-                    <td>
-                        <button onclick="rentBook(${b.id})" class="btn-rent" ${isDisabled ? 'disabled' : ''}>
-                            借りる
-                        </button>
-                    </td>
-                </tr>
-            `);
-        });
-        updateAdminBookSelect();
+        document.getElementById('bookListBody').innerHTML = booksData.map(b => {
+            const isOut = b.stock <= 0;
+            return `<tr>
+                <td><strong>${b.title}</strong></td>
+                <td style="color:${isOut?'red':'green'}">${isOut?'なし':b.stock+'冊'}</td>
+                <td><button onclick="rentBook(${b.id})" class="btn-rent" ${(isOut || isCurrentOverdue)?'disabled':''}>借りる</button></td>
+            </tr>`;
+        }).join('');
+        updateAdminSelects();
     }
 
     async function loadUsers() {
-        const res = await fetch(API.USERS);
-        usersData = await res.json();
-        const select = document.getElementById('userId');
-        const adminSelect = document.getElementById('admin-user-select');
-        select.innerHTML = '<option value="">-- 利用者を選択してください --</option>';
-        adminSelect.innerHTML = '<option value="">＋新規登録</option>';
-        usersData.forEach(u => {
-            select.insertAdjacentHTML('beforeend', `<option value="${u.id}">${u.name} (ID:${u.id})</option>`);
-            adminSelect.insertAdjacentHTML('beforeend', `<option value="${u.id}">ID:${u.id} ${u.name}</option>`);
-        });
-        select.value = ""; updateUI();
+        usersData = await request(API.USERS);
+        document.getElementById('userId').innerHTML = '<option value="">-- 利用者を選択してください --</option>' +
+            usersData.map(u => `<option value="${u.id}">${u.name} (ID:${u.id})</option>`).join('');
+        updateAdminSelects();
+        updateUI();
     }
 
     async function updateUI() {
-        const userId = document.getElementById('userId').value;
+        const uid = document.getElementById('userId').value;
         const rentBody = document.getElementById('myRentalsBody');
         const histBody = document.getElementById('myHistoryBody');
-        rentBody.innerHTML = ''; histBody.innerHTML = '';
 
-        if (!userId) {
+        if (!uid) {
             isCurrentOverdue = false;
-            rentBody.innerHTML = '<tr><td colspan="3" style="color:#999; text-align:center; padding:10px;">未選択</td></tr>';
-            toggleRentButtons(false);
-            return;
+            rentBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999; padding:20px;">利用者を選択してください</td></tr>';
+            histBody.innerHTML = '';
+            return loadBooks();
         }
 
-        const [aRes, hRes] = await Promise.all([
-            fetch(`${API.RENTALS}/active?userId=${userId}`),
-            fetch(`${API.RENTALS}/history?userId=${userId}`)
+        const [actives, history] = await Promise.all([
+            request(`${API.RENTALS}/active?userId=${uid}`),
+            request(`${API.RENTALS}/history?userId=${uid}`)
         ]);
-        const actives = await aRes.json();
-        const histories = await hRes.json();
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
+        const today = new Date(); today.setHours(0, 0, 0, 0);
         let overdueCount = 0;
 
-        actives.forEach(r => {
+        rentBody.innerHTML = actives.map(r => {
             const b = booksData.find(x => x.id == r.bookId);
-            const dueDate = new Date(r.dueDate);
-            dueDate.setHours(0, 0, 0, 0);
+            const due = new Date(r.dueDate); due.setHours(0, 0, 0, 0);
+            const isOver = due < today;
+            if (isOver) overdueCount++;
+            return `<tr class="${isOver?'overdue-row':''}">
+                <td class="${isOver?'overdue-text':''}">${b?b.title:'?'}${isOver?' (延滞)':''}</td>
+                <td class="${isOver?'overdue-text':''}">${due.toLocaleDateString()}</td>
+                <td><button onclick="returnBook(${r.bookId})" class="${isOver?'overdue-btn':''}">返却</button></td>
+            </tr>`;
+        }).join('');
 
-            // 本日中ならセーフ：期限が今日より前（昨日まで）なら延滞
-            const isOverdue = dueDate < today;
-            if (isOverdue) overdueCount++;
-
-            const rowClass = isOverdue ? 'class="overdue-row"' : '';
-            const textClass = isOverdue ? 'class="overdue-text"' : '';
-            const btnClass = isOverdue ? 'class="overdue-btn"' : 'class="btn-return"';
-
-            rentBody.insertAdjacentHTML('beforeend', `
-                <tr ${rowClass}>
-                    <td ${textClass}>${b ? b.title : '?'}${isOverdue ? ' <small>(延滞)</small>' : ''}</td>
-                    <td ${textClass}>${dueDate.toLocaleDateString()}</td>
-                    <td><button onclick="returnBook(${r.bookId})" ${btnClass}>${isOverdue ? '至急返却' : '返却'}</button></td>
-                </tr>
-            `);
-        });
-
-        isCurrentOverdue = (overdueCount > 0);
-        await loadBooks();
-
-        if (isCurrentOverdue) {
-            setTimeout(() => {
-                showModal(`🚨 【注意】延滞中の本が ${overdueCount} 冊あります！\n返却が完了するまで新しい本を借りることはできません。`);
-            }, 300);
-        }
-
-        histories.slice(0, 5).forEach(h => {
+        histBody.innerHTML = history.slice(0, 5).map(h => {
             const b = booksData.find(x => x.id == h.bookId);
-            histBody.insertAdjacentHTML('beforeend', `<tr><td>${b?b.title:'?'}</td><td><span style="color:#666; font-size:12px;">返却済</span></td></tr>`);
-        });
+            return `<tr><td>${b?b.title:'?'}</td><td style="color:#999; font-size:12px;">返却済</td></tr>`;
+        }).join('');
+
+        isCurrentOverdue = overdueCount > 0;
+        loadBooks();
+        if (isCurrentOverdue) showModal(`🚨 延滞中の本が ${overdueCount} 冊あります。\n返却するまで新規貸出は制限されます。`);
     }
 
-    function toggleRentButtons(disabled) {
-        const rentButtons = document.querySelectorAll('.btn-rent');
-        rentButtons.forEach(btn => {
-            const isOutOfStock = btn.closest('tr').innerText.includes('なし');
-            if (isOutOfStock) {
-                btn.disabled = true;
-            } else {
-                btn.disabled = disabled;
-            }
-        });
-    }
-
-    async function rentBook(id) {
+    // --- 4. 業務アクション (貸出・返却) ---
+    async function rentBook(bid) {
         const uid = document.getElementById('userId').value;
-        if (!uid) return showModal("利用者を選択してください");
-
-        const res = await fetch(`${API.RENTALS}/rent?bookId=${id}&userId=${uid}`, {method:'POST'});
-        const rawData = await res.text();
-
-        if (res.ok) {
-            showModal("✅ 貸出が完了しました");
-            await loadBooks();
-            await updateUI();
-        } else {
-            let errorMsg = rawData;
-            try {
-                const json = JSON.parse(rawData);
-                errorMsg = json.message || "リクエストが不正です";
-            } catch(e) { }
-            showModal("⚠️ 貸出不可\n" + errorMsg);
-        }
+        if (!uid) return showModal("👤 利用者を選択してください");
+        await request(`${API.RENTALS}/rent?bookId=${bid}&userId=${uid}`, { method: 'POST' });
+        showModal("✅ 貸出が完了しました");
+        updateUI();
     }
 
-    async function returnBook(id) {
+    async function returnBook(bid) {
         const uid = document.getElementById('userId').value;
         if (!uid) return;
-        const res = await fetch(`${API.RENTALS}/return?bookId=${id}&userId=${uid}`, {method:'POST'});
-        if (res.ok) {
-            await loadBooks();
-            await updateUI();
-            console.log("返却成功");
-        } else {
-            const msg = await res.text();
-            showModal("⚠️ 返却エラー\n" + msg);
-        }
+        await request(`${API.RENTALS}/return?bookId=${bid}&userId=${uid}`, { method: 'POST' });
+        updateUI();
     }
 
-    function syncBookForm() {
-        const id = document.getElementById('admin-book-select').value;
-        const b = booksData.find(x => x.id == id);
-        document.getElementById('admin-book-title').value = b ? b.title : '';
-        document.getElementById('admin-book-author').value = b ? b.author : '';
-        document.getElementById('admin-book-isbn').value = b ? (b.isbn || '') : '';
-        document.getElementById('admin-book-stock').value = b ? b.stock : '';
-        document.getElementById('btn-del-book').style.display = b ? 'inline-block' : 'none';
-    }
-
+    // --- 5. 管理者機能 (保存・削除・同期) ---
     async function saveBook() {
         const id = document.getElementById('admin-book-select').value;
-        const title = document.getElementById('admin-book-title').value;
-        const author = document.getElementById('admin-book-author').value;
-        const isbn = document.getElementById('admin-book-isbn').value;
         const stockInput = document.getElementById('admin-book-stock').value;
         const stock = parseInt(stockInput);
 
-        if (isNaN(stock) || stock < 1) {
-            showModal("⚠️ 在庫数は1冊以上で入力してください。");
-            return;
+        if (isNaN(stock) || stock < 1) { // バリデーション
+            return showModal("⚠️ 在庫数は1冊以上で入力してください。");
         }
 
-        const res = await fetch(API.BOOKS, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: id ? parseInt(id) : null, title, author, isbn, stock })
-        });
-
-        if (res.ok) {
-            showModal("✅ 本の情報を保存しました");
-            resetAdminForms();
-            await loadBooks();
-        } else {
-            const errorMsg = await res.text();
-            showModal("⚠️ 保存失敗\n" + errorMsg);
-        }
-    }
-
-    function syncUserForm() {
-        const id = document.getElementById('admin-user-select').value;
-        const u = usersData.find(x => x.id == id);
-        document.getElementById('admin-user-name').value = u ? u.name : '';
-        document.getElementById('admin-user-email').value = u ? u.email : '';
-        document.getElementById('btn-del-user').style.display = u ? 'inline-block' : 'none';
-    }
-
-    async function saveUser() {
-        const id = document.getElementById('admin-user-select').value;
-        const name = document.getElementById('admin-user-name').value;
-        const email = document.getElementById('admin-user-email').value;
-        const res = await fetch(API.USERS, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: id ? parseInt(id) : null, name, email })
-        });
-        const msg = await res.text();
-        if (res.ok) { showModal("✅ 保存しました"); resetAdminForms(); await loadUsers(); }
-        else { showModal("⚠️ 失敗\n" + msg); }
+        const payload = {
+            id: id ? parseInt(id) : null,
+            title: document.getElementById('admin-book-title').value,
+            author: document.getElementById('admin-book-author').value,
+            isbn: document.getElementById('admin-book-isbn').value,
+            stock: stock
+        };
+        await request(API.BOOKS, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        showModal("✅ 保存完了");
+        resetAdminForms(); loadBooks();
     }
 
     async function deleteBook() {
         const id = document.getElementById('admin-book-select').value;
-        if (!id) return;
-        const confirmed = await showModal("🗑 この本を完全に削除してもよろしいですか？", true);
-        if (!confirmed) return;
-        const res = await fetch(`${API.BOOKS}/${id}`, { method: 'DELETE' });
-        const rawMsg = await res.text();
-        if (res.ok) {
-            await showModal("🗑 削除が完了しました。");
-            resetAdminForms();
-            await loadBooks();
-        } else {
-            await showModal("⚠️ 削除できません\n\n" + rawMsg);
+        if (id && await showModal("🗑️ この本を完全に削除しますか？", true)) {
+            await request(`${API.BOOKS}/${id}`, { method: 'DELETE' });
+            showModal("🗑️ 削除完了");
+            resetAdminForms(); loadBooks();
         }
+    }
+
+    async function saveUser() {
+        const id = document.getElementById('admin-user-select').value;
+        const payload = {
+            id: id ? parseInt(id) : null,
+            name: document.getElementById('admin-user-name').value,
+            email: document.getElementById('admin-user-email').value
+        };
+        await request(API.USERS, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        showModal("✅ 保存完了");
+        resetAdminForms(); loadUsers();
     }
 
     async function deleteUser() {
         const id = document.getElementById('admin-user-select').value;
-        if (!id) return;
-        const confirmed = await showModal("👤 この利用者を完全に削除してもよろしいですか？", true);
-        if (!confirmed) return;
-        const res = await fetch(`${API.USERS}/${id}`, { method: 'DELETE' });
-        const msg = await res.text();
-        if (res.ok) {
-            await showModal("🗑 利用者の削除が完了しました。");
-            resetAdminForms();
-            await loadUsers();
-        } else {
-            await showModal("⚠️ 削除できません\n\n" + msg);
+        if (id && await showModal("👤 この利用者を完全に削除しますか？", true)) {
+            await request(`${API.USERS}/${id}`, { method: 'DELETE' });
+            showModal("🗑️ 削除完了");
+            resetAdminForms(); loadUsers();
         }
     }
 
+    async function loadOverdueList() {
+        const list = await request(`${API.RENTALS}/overdue`);
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        // 期限が今日より前（昨日まで）のものだけを抽出（本日中ならセーフ）
+        const filtered = list.filter(r => new Date(r.dueDate).setHours(0,0,0,0) < today.getTime());
+
+        document.getElementById('adminOverdueBody').innerHTML = filtered.length ? filtered.map(r => {
+            const u = usersData.find(x => x.id == r.userId), b = booksData.find(x => x.id == r.bookId);
+            const days = Math.floor((new Date() - new Date(r.dueDate)) / 86400000);
+            return `<tr><td>${u?u.name:'?'}</td><td>${b?b.title:'?'}</td><td style="color:red">${new Date(r.dueDate).toLocaleDateString()}</td><td>${days}日超過</td></tr>`;
+        }).join('') : '<tr><td colspan="4" style="text-align:center; color:#999; padding:20px;">延滞なし</td></tr>';
+    }
+
+    function syncBookForm() {
+        const b = booksData.find(x => x.id == document.getElementById('admin-book-select').value);
+        if (!b) return resetAdminForms();
+        document.getElementById('admin-book-title').value = b.title;
+        document.getElementById('admin-book-author').value = b.author;
+        document.getElementById('admin-book-isbn').value = b.isbn || "";
+        document.getElementById('admin-book-stock').value = b.stock;
+        document.getElementById('btn-del-book').style.display = "inline-block";
+    }
+
+    function syncUserForm() {
+        const u = usersData.find(x => x.id == document.getElementById('admin-user-select').value);
+        if (!u) return resetAdminForms();
+        document.getElementById('admin-user-name').value = u.name;
+        document.getElementById('admin-user-email').value = u.email;
+        document.getElementById('btn-del-user').style.display = "inline-block";
+    }
+
+    // --- 6. 共通UIユーティリティ ---
+    function showModal(msg, isConfirm = false) {
+        return new Promise(resolve => {
+            const modal = document.getElementById('modal');
+            document.getElementById('modalMsg').innerText = msg;
+            document.getElementById('modalCancelBtn').style.display = isConfirm ? 'inline-block' : 'none';
+            modal.style.display = 'flex';
+            document.getElementById('modalOkBtn').onclick = () => { modal.style.display = 'none'; resolve(true); };
+            document.getElementById('modalCancelBtn').onclick = () => { modal.style.display = 'none'; resolve(false); };
+        });
+    }
+
     function switchAdminTab(t) {
-        ['overdue', 'book', 'user'].forEach(x => { document.getElementById('area-'+x).style.display = (x===t?'block':'none'); document.getElementById('tab-'+x).classList.toggle('active', x===t); });
+        ['overdue', 'book', 'user'].forEach(x => {
+            document.getElementById('area-'+x).style.display = (x===t?'block':'none');
+            document.getElementById('tab-'+x).classList.toggle('active', x===t);
+        });
         resetAdminForms(); if (t==='overdue') loadOverdueList();
     }
+
     function resetAdminForms() {
-        document.getElementById('admin-book-select').value = ""; document.getElementById('admin-book-title').value = ""; document.getElementById('admin-book-author').value = ""; document.getElementById('admin-book-isbn').value = ""; document.getElementById('admin-book-stock').value = "";
+        document.querySelectorAll('.admin-section input').forEach(i => i.value = "");
+        document.querySelectorAll('#admin-book-select, #admin-user-select').forEach(s => s.value = "");
         document.getElementById('btn-del-book').style.display = "none";
-        document.getElementById('admin-user-select').value = ""; document.getElementById('admin-user-name').value = ""; document.getElementById('admin-user-email').value = "";
         document.getElementById('btn-del-user').style.display = "none";
     }
 
-    // ★【修正】管理者用延滞リストから本日期限のものを除外する
-    async function loadOverdueList() {
-        const res = await fetch(`${API.RENTALS}/overdue`);
-        const list = await res.json();
-        const body = document.getElementById('adminOverdueBody');
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        // 期限が今日より前（昨日まで）のものだけを抽出（本日中ならセーフ）
-        const filteredList = list.filter(r => new Date(r.dueDate).setHours(0,0,0,0) < today.getTime());
-
-        body.innerHTML = filteredList.length === 0 ? '<tr><td colspan="4" style="text-align:center; padding:10px; color:#999;">なし</td></tr>' : '';
-
-        filteredList.forEach(r => {
-            const u = usersData.find(x => x.id == r.userId);
-            const b = booksData.find(x => x.id == r.bookId);
-            const diff = Math.floor((new Date() - new Date(r.dueDate)) / 86400000);
-            body.insertAdjacentHTML('beforeend', `<tr><td>${u?u.name:'?'}</td><td>${b?b.title:'?'}</td><td style="color:red">${new Date(r.dueDate).toLocaleDateString()}</td><td>${diff}日超過</td></tr>`);
-        });
+    function updateAdminSelects() {
+        const bSel = document.getElementById('admin-book-select'), uSel = document.getElementById('admin-user-select');
+        const bVal = bSel.value, uVal = uSel.value;
+        bSel.innerHTML = '<option value="">＋新規登録</option>' + booksData.map(b => `<option value="${b.id}">ID:${b.id} ${b.title}</option>`).join('');
+        uSel.innerHTML = '<option value="">＋新規登録</option>' + usersData.map(u => `<option value="${u.id}">ID:${u.id} ${u.name}</option>`).join('');
+        bSel.value = bVal; uSel.value = uVal;
     }
-
-    function updateAdminBookSelect() { const s = document.getElementById('admin-book-select'); const v = s.value; s.innerHTML = '<option value="">＋新規登録</option>'; booksData.forEach(b => s.insertAdjacentHTML('beforeend', `<option value="${b.id}">ID:${b.id} ${b.title}</option>`)); s.value = v; }
-
-    function showModal(msg, isConfirm = false) {
-        return new Promise((resolve) => {
-            const modal = document.getElementById('modal');
-            const msgArea = document.getElementById('modalMsg');
-            const okBtn = document.getElementById('modalOkBtn');
-            const cancelBtn = document.getElementById('modalCancelBtn');
-
-            msgArea.innerText = msg;
-            cancelBtn.style.display = isConfirm ? 'inline-block' : 'none';
-            modal.style.display = 'flex';
-
-            okBtn.onclick = () => {
-                modal.style.display = 'none';
-                resolve(true);
-            };
-
-            cancelBtn.onclick = () => {
-                modal.style.display = 'none';
-                resolve(false);
-            };
-        });
-    }
-
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
 </script>
 </body>
 </html>

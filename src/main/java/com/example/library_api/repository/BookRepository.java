@@ -10,17 +10,34 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * 蔵書データアクセス層
+ * 標準的なCRUD操作に加え、排他制御および重複チェックのためのクエリを提供します。
+ */
 public interface BookRepository extends JpaRepository<Book, Long> {
-    // タイトルと著者の組み合わせで存在確認
+
+    // --- 1. 重複チェック（バリデーション用） ---
+
+    /** タイトルと著者の組み合わせによる存在確認 */
     boolean existsByTitleAndAuthor(String title, String author);
-    // ISBN単体で存在確認
+
+    /** ISBNによる存在確認 */
     boolean existsByIsbn(String isbn);
 
-    // ↓ ここが最重要！DBの行をロックして読み込みます
+
+    // --- 2. 検索・参照系 ---
+
+    /** タイトルによる部分一致検索（大文字小文字を区別しない） */
+    List<Book> findByTitleContainingIgnoreCase(String keyword);
+
+
+    // --- 3. 排他制御（トランザクション用） ---
+
+    /**
+     * 指定したIDの本を悲観的ロック（PESSIMISTIC_WRITE）をかけて取得します。
+     * 貸出・返却時の在庫不整合（ロストアップデート）を防止するために使用します。
+     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select b from Book b where b.id = :id")
     Optional<Book> findByIdWithLock(@Param("id") Long id);
-
-    // タイトルにキーワードが含まれるものを探す (IgnoreCaseで大文字小文字を区別しない)
-    List<Book> findByTitleContainingIgnoreCase(String keyword);
 }
